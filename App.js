@@ -9,6 +9,7 @@ import SettingsScreen from "./screens/SettingsScreen";
 import LoginScreen from "./screens/LoginScreen";
 import * as firebase from 'firebase';
 import SignUpScreen from "./screens/SignUpScreen";
+import MiniGameScreen from "./screens/MiniGameScreen";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDvMwT2YZCy4reaEMZ-yNxBu1hyd3ZJcyU",
@@ -37,6 +38,12 @@ const MainNavigator = createStackNavigator(
         },
         SignUp: {
             screen: SignUpScreen,
+            navigationOptions: {
+                headerShown: false,
+            },
+        },
+        MiniGame: {
+            screen: MiniGameScreen,
             navigationOptions: {
                 headerShown: false,
             },

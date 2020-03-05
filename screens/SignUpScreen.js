@@ -18,6 +18,7 @@ export default class SignUpScreen extends Component {
     }
 
     render() {
+        console.log(this.state.error);
         return (
             <View style={styles.container}>
                 <View style={styles.header}>
@@ -38,9 +39,10 @@ export default class SignUpScreen extends Component {
                             placeholderTextColor="#003f5c"
                             onChangeText={text => this.setState({password: text})}/>
                     </View>
-                    <View>
+                    <View style={styles.errorView}>
                         <Text style={styles.error}>{this.state.error}</Text>
                     </View>
+
                     <View>
                         <TouchableOpacity onPress={() => this.userSignUp()}>
                             <Text style={styles.loginText}>SIGN UP</Text>
@@ -92,7 +94,7 @@ const styles = StyleSheet.create({
         color: "white"
     },
     header: {
-        height: "12%",
+        height: 131,
         borderBottomColor: "#ffffff",
         borderBottomWidth: 1,
         backgroundColor: "#000000",
@@ -110,7 +112,13 @@ const styles = StyleSheet.create({
     },
     error: {
         fontSize: 15,
-        color: '#ffffff',
+        color: '#ff0000',
         marginBottom: "5%"
+    },
+    errorView: {
+        marginTop: 2,
+        backgroundColor: "#404040",
+        alignItems: 'center',
+        height:35,
     }
 });

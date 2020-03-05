@@ -64,11 +64,11 @@ export default class SearchScreen extends Component {
                     }
                 }
                 if(sourceTeam){
+                    console.log("gets set")
                     this.setState({leagueTeams: leagueTeams, sourceTeam: sourceTeam});
                 }else{
                     this.setState({leagueTeams: leagueTeams});
                 }
-
             });
     }
 

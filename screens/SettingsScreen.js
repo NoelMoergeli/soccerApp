@@ -27,20 +27,21 @@ export default class SettingsScreen extends Component {
         );
 
     }
-    someOption(){
-
+    toMiniGame(){
+        this.props.navigation.navigate('MiniGame');
     }
     deleteAccount(){
-        var user = firebase.auth().currentUser;
+        Alert.alert(
+            'Attention',
+            'Do you want to delete your Account',
+            [
+                {text: 'Yes', onPress: () => {
+                        firebase.auth().currentUser.delete().then(() => this.props.navigation.navigate('Login'))
+                    }},
+                {text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
+            ],
+        );
 
-        user.delete().then(function() {
-            console.log('user deleted');
-            console.log(this.props.navigation);
-            this.props.navigation.navigate('Login');
-        }).catch(function(error) {
-            console.log('some error occured');
-            this.props.navigation.navigate('Login');
-        });
     }
 
     render() {
@@ -63,23 +64,8 @@ export default class SettingsScreen extends Component {
                         </TouchableOpacity>
                     </View>
                     <View style={styles.button}>
-                        <TouchableOpacity style={styles.logout} onPress={() => this.someOption()}>
-                            <Text style={styles.logoutText}>some Option</Text>
-                        </TouchableOpacity>
-                    </View>
-                    <View style={styles.button}>
-                        <TouchableOpacity style={styles.logout} onPress={() => this.someOption()}>
-                            <Text style={styles.logoutText}>some Option</Text>
-                        </TouchableOpacity>
-                    </View>
-                    <View style={styles.button}>
-                        <TouchableOpacity style={styles.logout} onPress={() => this.someOption()}>
-                            <Text style={styles.logoutText}>some Option</Text>
-                        </TouchableOpacity>
-                    </View>
-                    <View style={styles.button}>
-                        <TouchableOpacity style={styles.logout} onPress={() => this.someOption()}>
-                            <Text style={styles.logoutText}>some Option</Text>
+                        <TouchableOpacity style={styles.logout} onPress={() => this.toMiniGame()}>
+                            <Text style={styles.logoutText}>Mini Game</Text>
                         </TouchableOpacity>
                     </View>
                     <View style={styles.button}>

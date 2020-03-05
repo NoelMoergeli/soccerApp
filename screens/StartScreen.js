@@ -1,13 +1,10 @@
 import React, {Component} from "react";
 import {
-    Button,
-    Image,
-    Picker,
+    Alert,
     SafeAreaView,
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
     View
 } from 'react-native';
@@ -30,85 +27,136 @@ export default class StartScreen extends Component {
             leagueTeams: [],
             sourcePlayers: [],
             sourceTeams: [],
+            error: "",
         }
     }
 
-    openFavouritePlayers() {
-        if (this.state.showFavouritePlayers === false) {
-            this.setState({sourcePlayers: []});
-            firebase.database().ref('users/' + firebase.auth().currentUser.uid).on('value', (snapshot) => {
-                const dbPlayers = Object.values(snapshot.val());
-                this.setState({dbPlayers});
-            });
-            console.log(this.state.dbPlayers);
-            console.log(this.state.dbPlayers.length);
+    openFavouritePlayer() {
 
-            for (let i = 0; i < this.state.dbPlayers.length; i++) {
-                fetch("https://api.footystats.org/league-players?key=example&league_id=" + this.state.dbPlayers[i].favouritePlayerLeague)
-                    .then(response => response.json())
-                    .then(data => {
-                        let leaguePlayers = data.data;
-                        this.setState({leaguePlayers: leaguePlayers});
-                    });
-                console.log(this.state.leaguePlayers.length);
-                for (let j = 0; j < this.state.leaguePlayers.length; j++) {
-                    if (this.state.leaguePlayers[j].id === this.state.dbPlayers[i].favouritePlayer) {
-                        this.state.sourcePlayers.push(this.state.leaguePlayers[j]);
-                        console.log("found");
-                        console.log(this.state.sourcePlayers.length)
+    }
+    openFavouriteTeam() {
+
+    }
+    deleteFavourite(deletePlayer) {
+
+        Alert.alert(
+            'Attention',
+            'Do you want to delete all your favourites',
+            [
+                {text: 'Yes', onPress: () => {
+                        var adaRef = firebase.database().ref('users/' + firebase.auth().currentUser.uid).child(deletePlayer.key);
+                        console.log(adaRef)
+                        adaRef.remove().then(function() {
+                            console.log("Remove succeeded.")
+                        })
+                            .catch(function(error) {
+                                console.log("Remove failed: " + error.message)
+                            });
+                    }},
+                {text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
+            ],
+        );
+    }
+
+    openFavouritePlayers = async () => {
+        let sourcePlayers = [];
+        let leaguePlayers;
+        let error = "";
+        if (!this.state.showFavouritePlayers) {
+            let dbPlayers = [];
+
+            await firebase.database().ref('users/' + firebase.auth().currentUser.uid).on('value', (snapshot) => {
+                if(snapshot.val() != null){
+                const values = snapshot.val();
+                    dbPlayers = Object.keys(values).map(key=>({
+                        ...values[key],
+                        key: key,
+                    }));
+                }else{
+                   error = "no favourite Players found";
+                }
+            });
+            for (let i = 0; i < dbPlayers.length; i++) {
+                const response = await fetch("https://api.footystats.org/league-players?key=example&league_id=" + dbPlayers[i].favouritePlayerLeague);
+                const data = await response.json();
+                leaguePlayers = data.data;
+                for (let j = 0; j < leaguePlayers.length; j++) {
+                    if (leaguePlayers[j].id === dbPlayers[i].favouritePlayer) {
+                        sourcePlayers.push(leaguePlayers[j]);
                     }
                 }
             }
-            console.log(this.state.sourcePlayers);
-            let table1Content = this.state.sourcePlayers.map((fp) => {
-                return [fp.known_as, '\n','Age:' + fp.age];
+            let table1Content = sourcePlayers.map((fp, i) => {
+                return (
+                    <View key={i} style={styles.playerList}>
+                        <Text style={styles.NameText}>
+                            {fp.known_as}
+                        </Text>
+                        <TouchableOpacity style={styles.button} onPress={() => this.openFavouritePlayer()}>
+                            <Text style={styles.buttonText}>open favourite</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.button} onPress={() => this.deleteFavourite(dbPlayers[i])}>
+                            <Text style={styles.buttonText}>delete favourite</Text>
+                        </TouchableOpacity>
+                    </View>
+                );
             });
-            this.setState({showFavouritePlayers: true, table1Content: table1Content});
+            this.setState({dbPlayers, sourcePlayers, leaguePlayers, table1Content,error, showFavouritePlayers: true});
         } else {
-            this.setState({showFavouritePlayers: false});
+            this.setState({showFavouritePlayers: false, error});
         }
-    }
+    };
 
+    openFavouriteTeams = async () => {
+        let sourceTeams = [];
+        let leagueTeams;
+        let error = "";
+        if (!this.state.showFavouriteTeams) {
+            let dbTeams = [];
 
-    openFavouriteTeams() {
-        if (this.state.showFavouriteTeams === false) {
-            this.setState({sourceTeams: []});
-            firebase.database().ref('users/' + firebase.auth().currentUser.uid).on('value', (snapshot) => {
-                const dbTeams = Object.values(snapshot.val());
-                this.setState({dbTeams});
+            await firebase.database().ref('users/' + firebase.auth().currentUser.uid).on('value', (snapshot) => {
+                if(snapshot.val() != null) {
+                    const values = snapshot.val();
+                    dbTeams = Object.keys(values).map(key => ({
+                        ...values[key],
+                        key: key,
+                    }));
+                }else{
+                    error = "no favourite Teams found";
+                }
             });
-            console.log(this.state.dbTeams);
-            console.log(this.state.dbTeams.length);
-
-            for (let i = 0; i < this.state.dbTeams.length; i++) {
-                fetch("https://api.footystats.org/league-teams?key=example&league_id=" + this.state.dbTeams[i].favouriteTeamLeague)
-                    .then(response => response.json())
-                    .then(data => {
-                        let leagueTeams = data.data;
-                        this.setState({leagueTeams: leagueTeams});
-                    });
-                console.log(this.state.leagueTeams.length);
-                for (let j = 0; j < this.state.leagueTeams.length; j++) {
-                    if (this.state.leagueTeams[j].id === this.state.dbTeams[i].favouriteTeam) {
-                        this.state.sourceTeams.push(this.state.leagueTeams[j]);
-                        console.log("found");
-                        console.log(this.state.sourceTeams.length)
+            for (let i = 0; i < dbTeams.length; i++) {
+                const response = await fetch("https://api.footystats.org/league-teams?key=example&league_id=" + dbTeams[i].favouriteTeamLeague);
+                const data = await response.json();
+                leagueTeams = data.data;
+                for (let j = 0; j < leagueTeams.length; j++) {
+                    if (leagueTeams[j].id === dbTeams[i].favouriteTeam) {
+                        sourceTeams.push(leagueTeams[j]);
                     }
                 }
             }
-            console.log(this.state.sourceTeams);
-            let table2Content = this.state.sourceTeams.map((fp) => {
-                return [fp.cleanName, '\n','Founded:' + fp.founded];
+            let table2Content = sourceTeams.map((ft, i) => {
+                return (
+                    <View key={i} style={styles.playerList}>
+                        <Text style={styles.NameText}>
+                            {ft.cleanName}
+                        </Text>
+                        <TouchableOpacity style={styles.button} onPress={() => this.openFavouriteTeam()}>
+                            <Text style={styles.buttonText}>open favourite</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.button} onPress={() => this.deleteFavourite(dbTeams[i])}>
+                            <Text style={styles.buttonText}>delete favourite</Text>
+                        </TouchableOpacity>
+                    </View>
+                );
             });
-            this.setState({showFavouriteTeams: true, table2Content: table2Content});
+            this.setState({dbTeams, sourceTeams, leagueTeams,table2Content,error, showFavouriteTeams: true});
         } else {
-            this.setState({showFavouriteTeams: false});
+            this.setState({showFavouriteTeams: false,error});
         }
-
-    }
+    };
 
     render() {
-
         return (
             <View style={styles.container}>
                 <View style={styles.pink}/>
@@ -121,97 +169,132 @@ export default class StartScreen extends Component {
                         <TouchableOpacity style={styles.titleView1} onPress={() => this.openFavouritePlayers()}>
                             <Text style={styles.text1}>Favourite Players</Text>
                         </TouchableOpacity>
-                        {(this.state.showFavouritePlayers === true) &&
+                        {(this.state.showFavouritePlayers && this.state.error === "") &&
                         <Table style={styles.table}>
-                            <Row data={this.state.table1Head}/>
-                            <Rows data={this.state.table1Content}/>
+                            {this.state.table1Content}
                         </Table>
                         }
                         <TouchableOpacity style={styles.titleView2} onPress={() => this.openFavouriteTeams()}>
                             <Text style={styles.text3}>Favourite Teams</Text>
                         </TouchableOpacity>
-                        {(this.state.showFavouriteTeams === true) &&
+                        {(this.state.showFavouriteTeams && this.state.error === "") &&
                         <Table style={styles.table}>
-                            <Row data={this.state.table2Head}/>
-                            <Rows data={this.state.table2Content}/>
+                            {this.state.table2Content}
                         </Table>
                         }
+                        <View style={styles.error}>
+                            <Text style={styles.errorText}>{this.state.error}</Text>
+                        </View>
                     </ScrollView>
                 </SafeAreaView>
             </View>
         );
     }
-}
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#404040",
-    },
-    header: {
-        height: "12%",
-        borderBottomColor: "#ffffff",
-        borderBottomWidth: 1,
-        backgroundColor: "#000000",
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    title: {
-        fontSize: 30,
-        color: '#ffffff'
-    },
-    pink: {
-        height: "6%",
-        borderBottomColor: "#ffffff",
-        borderBottomWidth: 1,
-        backgroundColor: "#000000",
-    },
-    text1: {
-        fontSize: 20,
-        color: '#ffffff',
-        marginLeft: "32%",
-        marginBottom: '5%',
-        marginTop: '5%'
-    },
-    text3: {
-        fontSize: 20,
-        color: '#ffffff',
-        marginLeft: "34%",
-        marginTop: '5%',
-        marginBottom: '5%'
-    },
-    container1: {
-        height: '75%',
-        width: '100%',
-    },
-    scrollView: {},
-    titleView1: {
-        borderBottomColor: '#ffffff',
-        borderBottomWidth: 1,
-        borderTopColor: '#ffffff',
-        borderTopWidth: 1,
-        backgroundColor: '#000000',
-        flexDirection: 'row',
-        width: '100%',
-    },
-    titleView2: {
-        borderBottomColor: '#ffffff',
-        borderBottomWidth: 1,
-        backgroundColor: '#000000',
-    },
-    emptySpace:{
-        height: '3%',
-        backgroundColor: '#404040',
-    },
-    table: {
-        backgroundColor: "#ec7874",
-        marginHorizontal: 20,
-        marginVertical: 10,
-        borderRadius: 20,
-        paddingLeft: '4%',
-    },
-    favPlayers: {
-        backgroundColor: '#ff0000',
-        width: '100%',
 
-    }
-});
+}
+const
+    styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: "#404040",
+        },
+        header: {
+            height: "12%",
+            borderBottomColor: "#ffffff",
+            borderBottomWidth: 1,
+            backgroundColor: "#000000",
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        title: {
+            fontSize: 30,
+            color: '#ffffff'
+        },
+        pink: {
+            height: "6%",
+            borderBottomColor: "#ffffff",
+            borderBottomWidth: 1,
+            backgroundColor: "#000000",
+        },
+        text1: {
+            fontSize: 20,
+            color: '#ffffff',
+            marginLeft: "32%",
+            marginBottom: '5%',
+            marginTop: '5%'
+        },
+        text3: {
+            fontSize: 20,
+            color: '#ffffff',
+            marginLeft: "34%",
+            marginTop: '5%',
+            marginBottom: '5%'
+        },
+        container1: {
+            height: '75%',
+            width: '100%',
+        },
+        scrollView: {},
+        titleView1: {
+            borderBottomColor: '#ffffff',
+            borderBottomWidth: 1,
+            borderTopColor: '#ffffff',
+            borderTopWidth: 1,
+            backgroundColor: '#000000',
+            flexDirection: 'row',
+            width: '100%',
+        },
+        titleView2: {
+            borderBottomColor: '#ffffff',
+            borderTopColor: '#ffffff',
+            borderBottomWidth: 1,
+            borderTopWidth: 1,
+            backgroundColor: '#000000',
+        },
+        emptySpace: {
+            height: '3%',
+            backgroundColor: '#404040',
+        },
+        table: {
+            backgroundColor: "#404040",
+            marginHorizontal: 20,
+            marginVertical: 10,
+            borderRadius: 20,
+        },
+        favPlayers: {
+            backgroundColor: '#ff0000',
+            width: '100%',
+        },
+        NameText: {
+            fontSize: 30,
+            marginTop: 10,
+            color: 'white',
+        },
+        playerList: {
+            alignItems: 'center',
+            marginBottom: 25,
+        },
+        button: {
+            backgroundColor: '#ec7874',
+            marginTop: '7%',
+            marginLeft: '1%',
+            height: 50,
+            width: 300,
+            borderRadius:20,
+            alignItems: 'center',
+        },
+        buttonText: {
+            color: 'white',
+            fontSize: 24,
+            marginTop: 10,
+        },
+        error: {
+            marginTop: 20,
+            alignItems: 'center',
+
+        },
+        errorText: {
+            color: 'red',
+            fontSize: 20
+        }
+    });

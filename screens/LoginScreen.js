@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {StyleSheet, Text, View, TextInput, TouchableOpacity} from 'react-native';
+import {StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView} from 'react-native';
 import * as firebase from "firebase";
 
 export default class LoginScreen extends Component {
@@ -47,7 +47,7 @@ export default class LoginScreen extends Component {
                             secureTextEntry
                             onChangeText={text => this.setState({password: text})}/>
                     </View>
-                    <View>
+                    <View style={styles.errorView}>
                         <Text style={styles.error}>{this.state.error}</Text>
                     </View>
                     <View>
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
         color: "white"
     },
     header: {
-        height: "12%",
+        height: 131,
         borderBottomColor: "#ffffff",
         borderBottomWidth: 1,
         backgroundColor: "#000000",
@@ -114,7 +114,14 @@ const styles = StyleSheet.create({
     },
     error: {
         fontSize: 15,
-        color: '#ffffff',
+        color: '#ff0000',
         marginBottom: "5%"
+    },
+    errorView: {
+        marginTop: 2,
+        backgroundColor: "#404040",
+        alignItems: 'center',
+        height:35,
     }
+
 });
